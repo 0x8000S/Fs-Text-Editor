@@ -35,6 +35,6 @@ exe = EXE(
     target_arch=None,
     codesign_identity=None,
     entitlements_file=None,
-    icon=['d:\\Users\\qinch\\Documents\\Python\\fs\\fs.icon.ico'],
+    icon=['d:\\Users\\qinch\\Documents\\Python\\fs\\fs.ico'],
     version="fs_verison_info.txt"
 )

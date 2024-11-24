@@ -1,57 +1,172 @@
 # -*- encoding:utf-8 -*-
 ''''
-@Time : 2024/09/26/ 00:21:08
+@Time : 2024/11/24/ 01:59:08
 @Author : 氢気氚 | qinch
-@Version : 1.2.9
+@Version : 1.4.9
 @Contact : BlueRectS@outlook.com
 '''
+
 import sys
 import cmd
 import os
 import chardet
+from colorama import init, Fore, Style
+import json
 
+init(autoreset=True)
+
+def Code_Detection(path, encoding, Error_Code):
+    try:
+        with open(path, 'rb') as f:
+            result = chardet.detect(f.read())  # 读取一定量的数据进行编码检测
+        if encoding == "auto":
+            return result
+        else:
+            result["encoding"] = encoding
+            return result
+    except LookupError:
+        print(Fore.RED + Error_Code[5])
+        print(Fore.RED + Error_Code[6] +encoding)
+    except IndexError:
+        sys.exit()
+
+def load_options(filename='config.json'):
+    try:
+        with open(filename, 'r') as f:
+            return json.load(f)
+    except FileNotFoundError:
+        return {}
+
+def save_options(options, filename='config.json'):
+    with open(filename, 'w') as f:
+        json.dump(options, f, indent=4)
+
+def ChangeTheLanguage(lang):
+    speech_zh = ["欢迎! 键入 help 或 ? 来列出全部的命令.\n", 
+              "配置文件已存在,是否覆盖(Y/N):",
+              "是否保存该文件? (Yes/No)-[默认:Yes]",
+              "这是一个新的文件，请输入文件名:",
+              "文件名: ",
+              "状态: ",
+              "行数: ",
+              "当前行: ",
+              "文件编码: ",
+              "fs已退出!",
+              "不受支持的语言!",
+              "作者: ",
+              "联系方式: "
+              ]
+    speech_en = ["Welcome! Type help or ? to list all the commands.\n",
+     "The configuration file already exists, whether it is overridden (Y/N):",
+    "Do you want to save the file? (Yes/No)-[Default: Yes]",
+    "This is a new file, please enter the file name:",
+    "FileName: ",
+    "State: ",
+    "Number of Lines: ",
+    "Current Row: ",
+    "File Encoding: ",
+    "FS has exited!",
+    "Unsupported Languages!",
+    "Author: ",
+    "Contact :"
+    ]
+    Error_Code_zh = ["", "文件错误", "超出索引", "参数无效", 
+                  "非法的文件名", "编码错误", 
+                  "请检测你的配置文件,或是当前的设置,当前配置编码:", "参数过多", "未知的命令"]
+    Error_Code_en = ["", "File Error", "Out Of Index", "The parameter is invalid",
+                     "Illegal File Name", "Encoding Errors",
+                     "Please check your profile, or the current settings, the current configuration code:",
+                     "Too Many Parameters", "Unknown Command"
+                     ]
+    if lang == "zh-CN":
+        return speech_zh, Error_Code_zh
+    elif lang == "en-US":
+        return speech_en, Error_Code_en
 print(os.getcwd())
 class Consoles(cmd.Cmd):
-    intro = "欢迎! 键入 help 或 ? 来列出全部的命令.\n"
+    HelpfulTips = {"load": ["加载文件到缓冲区","Load the file into the buffer"],
+                    "show": ["展示文件内容", "Present the contents of the file"],
+                    "i": ["插入指定行(未指定则以光标所在行为准)输入 -end 可结束插入", 
+                         "Insert the specified line (if not specified, the cursor will be accurate) and enter -end to end the insertion"],
+                    "o": ["覆写指定行(未指定则以光标所在行为准)输入 -end 可结束覆写", 
+                          "Overwrite the specified line (if not specified, the cursor is accurate), enter -end to end the override"],
+                    "del": ["删除多行或指定删除单行", 
+                            "Delete multiple rows or specify to delete a single line"],
+                    "line": ["查看行或是更改行", "View rows or change rows"],
+                    "unload": ["将当前文件弹出", "Ejects the current file"],
+                    "config": ["配置临时设置或是生成配置文件", 
+                               "Configure temporary settings or generate configuration files"],
+                    "w": ["将缓冲区的文本写入文件", 
+                          "Write the text of the buffer to a file"],
+                    "af": ["关于正在编辑文件的信息", 
+                           "Information about the file being edited"],
+                    "about": ["显示关于信息", 
+                              "Displays information about"],
+                    "wq": ["将缓冲区的文本写入文件并退出fs", 
+                           "Write the text of the buffer to the file and exit FS"],
+                    "q": ["退出 fs", "Exit FS"]
+                   }
+    PersonalInformation = ["氢気氚 | qinch", "BlueRectS@outlook.com"]
+    OpenEncodings = "auto"
+    Language = "zh-CN"
+    if os.path.exists("config.json"):
+        file_option = load_options()
+        OpenEncodings = file_option['OpenEncodings']
+        Language = file_option['Language']
+    ValidLanguageCode = ['zh-CN', "en-US"]
+    speech, Error_Code = ChangeTheLanguage(Language)
+    intro = speech[0]
     Virtual_Text = []
     State = 'N'
     F = None
     path = ""
     line = 0
-    Error_Code = ["", "文件错误", "超出索引", "参数无效", "非法的文件名"]
     temp = ""
+    commands = ['load', 'show', 'i', 'o', 'del', 'unload', 'af', 
+                'about', 'wq', 'q']
     try:
-        if not sys.argv[1] == "":
-            with open(sys.argv[1], 'rb') as f:
-                result = chardet.detect(f.read())  # 读取一定量的数据进行编码检测
-            path = sys.argv[1]
-            F = open(sys.argv[1], "r+", encoding=result["encoding"])
-            State = 'H'
-            prompt = f"[{F.name}]@{State}-[{line+1}]~>"
-            Virtual_Text = F.readlines()
+        result = Code_Detection(sys.argv[1], OpenEncodings, Error_Code)
+        path = sys.argv[1]
+        F = open(sys.argv[1], "r+", encoding=result["encoding"])
+        State = 'H'
+        prompt = f"[{F.name}]@{State}-[{line+1}]~>"
+        Virtual_Text = F.readlines()
     except IndexError:
         State = 'V'
         path = "Buffer_Files-fs.txt"
-        F = open("Buffer_Files-fs.txt", "w+", encoding="utf-8")
-        result = {'encoding':'utf-8'}
-        result['encoding'] = 'utf-8'
-        Virtual_Text = F.readlines()
-        prompt = f"[{F.name}]@{State}-[{line+1}]~>"
+        if OpenEncodings == "auto":
+                F = open("Buffer_Files-fs.txt", "w+", encoding="utf-8")
+                result = {'encoding':'utf-8'}
+                result['encoding'] = 'utf-8'
+                Virtual_Text = F.readlines()
+                prompt = f"[{F.name}]@{State}-[{line+1}]~>"
+        else:
+            try:
+                F = open("Buffer_Files-fs.txt", "w+", encoding=OpenEncodings)
+                result = {'encoding':OpenEncodings}
+                result['encoding'] = OpenEncodings
+                Virtual_Text = F.readlines()
+                prompt = f"[{F.name}]@{State}-[{line+1}]~>"
+            except LookupError:
+                print(Fore.RED + Error_Code[5])
+                print(Fore.RED + Error_Code[6] + OpenEncodings)
+                os.remove("Buffer_Files-fs.txt")
+                sys.exit()
+        
     def do_load(self, arg):
         '加载文件到缓冲区'
         self.F.close()
         if self.State == 'V':
             os.remove("Buffer_Files-fs.txt")
         try:
-            with open(arg, 'rb') as f:
-                result = chardet.detect(f.read())  # 读取一定量的数据进行编码检测
+            result = Code_Detection(arg, self.OpenEncodings, self.Error_Code)
             self.F = open(arg, "r+", encoding=result["encoding"])
             self.State = 'H'
             self.prompt = f"[{self.F.name}]@{self.State}-[{self.line+1}]~>"
             self.Virtual_Text = self.F.readlines()
             self.path = self.F.name
         except FileNotFoundError:
-            print(self.Error_Code[1])
+            print(Fore.RED+self.Error_Code[1])
 
     def do_show(self, arg=""):
         '展示文件内容'
@@ -97,9 +212,9 @@ class Consoles(cmd.Cmd):
                         print(f"\n===Show=== -> {start+1}:{stop+1} | {self.Error_Code[Error]}")
                         Error = 0
                 else:
-                    print("参数过多!")
+                    print(Fore.RED + self.Error_Code[7])
             except ValueError:
-                print(self.Error_Code[3])
+                print(Fore.RED+self.Error_Code[3])
     def do_i(self, arg):
         '插入指定行(未指定则以光标所在行为准)输入 -end 可结束插入'
         o = self.State
@@ -126,7 +241,7 @@ class Consoles(cmd.Cmd):
                     self.Virtual_Text.insert(self.line, temp + "\n")
                     self.line += 1
             except ValueError:
-                print(self.Error_Code[3])
+                print(Fore.RED+self.Error_Code[3])
     def do_o(self, arg):
         '覆写指定行(未指定则以光标所在行为准)输入 -end 可结束覆写'
         o = self.State
@@ -173,9 +288,9 @@ class Consoles(cmd.Cmd):
             elif len(parameter) == 2:
                     del self.Virtual_Text[int(parameter[0]) - 1: int(parameter[1]) - 1]
         except ValueError:
-            print(self.Error_Code[3])
+            print(Fore.RED+self.Error_Code[3])
         except IndexError:
-            print(self.Error_Code[2])
+            print(Fore.RED+self.Error_Code[2])
     def do_line(self, arg):
         '查看行或是更改行'
         if arg == "":
@@ -185,7 +300,7 @@ class Consoles(cmd.Cmd):
                 self.line = int(arg) - 1
                 self.prompt = f"[{self.F.name}]@{self.State}-[{self.line+1}]~>"
             except ValueError:
-                print(self.Error_Code[3])
+                print(Fore.RED+self.Error_Code[3])
     def do_unload(self, arg):
         '将当前文件弹出'
         self.F.close()
@@ -194,6 +309,45 @@ class Consoles(cmd.Cmd):
         self.State = 'N'
         self.Virtual_Text = []
         self.prompt = f"[{self.path}]@{self.State}-[{self.line+1}]~>"
+    def do_config(self, arg):
+        '配置临时设置或是生成配置文件'
+        temp = ""
+        partition = arg.split( )
+        options = {
+            "OpenEncodings": f"{self.OpenEncodings}",
+            "Language": f"{self.Language}"
+        }
+        if arg == "new":
+            if os.path.exists("config.json"):
+                temp = input(self.speech[1])
+                if temp == "Y" or "y" or "":
+                    f = open("config.json", 'w')
+                    f.close()
+                    save_options(options)
+                elif temp == "N" or "n":
+                    pass
+            else:
+                f = open("config.json", 'w')
+                f.close()
+                save_options(options)
+        elif arg == "res":
+            save_options(options)
+        elif arg == "write":
+            save_options(options)
+        elif partition[0] == "encoding":
+            if len(partition) == 1:
+                print(self.OpenEncodings)
+            else:
+                self.OpenEncodings = partition[1]
+        elif partition[0] == "language":
+            if len(partition) == 1:
+                print(self.Language)
+            else:
+                if partition[1] in self.ValidLanguageCode:
+                    self.Language = partition[1]
+                    self.speech, self.Error_Code = ChangeTheLanguage(self.Language)
+                else:
+                    print(Fore.RED+self.speech[10])
     def do_w(self, arg):
         '将缓冲区的文本写入文件'
         self.F.close()
@@ -202,10 +356,10 @@ class Consoles(cmd.Cmd):
         self.F.close()
         if self.State == 'V' or self.State == 'N':
             while True:
-                    answer = input("是否保存该文件? (Yes/No)-[默认:Yes]")
-                    if answer == "Yes" or answer == "Y" or answer == "y" or answer == "":
+                    answer = input(self.speech[2])
+                    if answer == "Yes" or "Y" or "y" or "":
                         try:
-                            name = input("这是一个新的文件，请输入文件名:")
+                            name = input(self.speech[3])
                             os.rename("Buffer_Files-fs.txt", name)
                             self.State = 'H'
                             self.path = name
@@ -214,9 +368,9 @@ class Consoles(cmd.Cmd):
                             self.prompt = f"[{self.F.name}]@{self.State}-[{self.line+1}]~>"
                             break
                         except FileNotFoundError:
-                            print(self.Error_Code[4])
+                            print(Fore.RED+self.Error_Code[4])
                         except FileExistsError:
-                            print(self.Error_Code[4])
+                            print(Fore.RED+self.Error_Code[4])
                     else:
                         break
         else:
@@ -225,16 +379,16 @@ class Consoles(cmd.Cmd):
             self.prompt = f"[{self.F.name}]@{self.State}-[{self.line+1}]~>"
     def do_af(self, arg):
         '关于正在编辑文件的信息'
-        print(f"文件名: {self.F.name}")
-        print(f"状态: {self.State}")
-        print(f"行数: {len(self.Virtual_Text)}")
-        print(f"当前行: {self.line+1}")
-        print(f"文件编码: {self.result['encoding']}")
+        print(self.speech[4] + self.F.name)
+        print(self.speech[5] + self.State)
+        print(self.speech[6] + str(len(self.Virtual_Text)+1))
+        print(self.speech[7] + str(self.line+1))
+        print(self.speech[8] + self.result['encoding'])
     def do_about(self, arg):
         '显示关于信息'
         print("fs 1.2.9")
-        print("作者: 氢気氚 | qinch")
-        print("联系方式: BlueRectS@outlook.com")
+        print(self.speech[11] + self.PersonalInformation[0])
+        print(self.speech[12] + self.PersonalInformation[1])
     def do_wq(self, arg):
         '将缓冲区的文本写入文件并退出fs'
         self.F.close()
@@ -244,10 +398,10 @@ class Consoles(cmd.Cmd):
         
         if self.State == 'V' or self.State == 'N':
             while True:
-                    answer = input("是否保存该文件? (Yes/No)-[默认:Yes]")
+                    answer = input(self.speech[2])
                     if answer == "Yes" or answer == "Y" or answer == "y" or answer == "":
                         try:
-                            name = input("这是一个新的文件，请输入文件名:")
+                            name = input(self.speech[3])
                             os.rename("Buffer_Files-fs.txt", name)
                             self.State = 'H'
                             self.path = name
@@ -258,17 +412,28 @@ class Consoles(cmd.Cmd):
                             print(self.Error_Code[4])
                     else:
                         os.remove("Buffer_Files-fs.txt")
-        print("fs已退出! (。・∀・)/")
+        print(self.speech[9])
         return True
     def do_q(self, arg):
         '退出 fs'
         self.F.close()
         if self.State == 'V':
             os.remove("Buffer_Files-fs.txt")
-        print("fs已退出! (。・∀・)/")
+        print(self.speech[9])
         return True
+    def do_help(self, arg):
+        if arg == '':
+            for i in self.commands:
+                print(f"{i}\t", end='')
+            print("\n")
+        else:
+            temp = self.HelpfulTips[arg] 
+            if self.Language == 'zh-CN':
+                print(temp[0])
+            elif self.Language == 'en-US':
+                print(temp[1])  
     def default(self, line):
-        print("未知的命令")
+        print(Fore.RED+self.Error_Code[8])
     
 conseols = Consoles(completekey="tab")
 conseols.cmdloop()
