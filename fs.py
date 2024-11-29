@@ -1,8 +1,8 @@
 # -*- encoding:utf-8 -*-
 ''''
-@Time : 2024/11/24/ 01:59:08
+@Time : 2024/11/30/ PM 00:13:08
 @Author : 氢気氚 | qinch
-@Version : 1.4.9
+@Version : 1.5.0
 @Contact : BlueRectS@outlook.com
 '''
 
@@ -14,7 +14,10 @@ from colorama import init, Fore, Style
 import json
 
 init(autoreset=True)
+env_dist = os.environ # environ是在os.py中定义的一个dict environ = {}
 
+config_path = env_dist['HOMEDRIVE'] + env_dist['HOMEPATH'] + "\\Fs" 
+print(config_path)
 def Code_Detection(path, encoding, Error_Code):
     try:
         with open(path, 'rb') as f:
@@ -30,14 +33,14 @@ def Code_Detection(path, encoding, Error_Code):
     except IndexError:
         sys.exit()
 
-def load_options(filename='config.json'):
+def load_options(filename=f"{config_path}\\config.json"):
     try:
         with open(filename, 'r') as f:
             return json.load(f)
     except FileNotFoundError:
         return {}
 
-def save_options(options, filename='config.json'):
+def save_options(options, filename=f"{config_path}\\config.json"):
     with open(filename, 'w') as f:
         json.dump(options, f, indent=4)
 
@@ -109,7 +112,7 @@ class Consoles(cmd.Cmd):
     PersonalInformation = ["氢気氚 | qinch", "BlueRectS@outlook.com"]
     OpenEncodings = "auto"
     Language = "zh-CN"
-    if os.path.exists("config.json"):
+    if os.path.exists(config_path) and os.path.exists(config_path+'\\config.json'):
         file_option = load_options()
         OpenEncodings = file_option['OpenEncodings']
         Language = file_option['Language']
@@ -318,16 +321,18 @@ class Consoles(cmd.Cmd):
             "Language": f"{self.Language}"
         }
         if arg == "new":
-            if os.path.exists("config.json"):
+            if os.path.exists(config_path+'\\config.json'):
                 temp = input(self.speech[1])
                 if temp == "Y" or "y" or "":
-                    f = open("config.json", 'w')
+                    f = open(config_path+'\\config.json', 'w')
                     f.close()
                     save_options(options)
                 elif temp == "N" or "n":
                     pass
             else:
-                f = open("config.json", 'w')
+                if not os.path.exists(config_path):
+                    os.mkdir(config_path)
+                f = open(f"{config_path}\\config.json", 'w')
                 f.close()
                 save_options(options)
         elif arg == "res":
