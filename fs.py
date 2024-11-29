@@ -391,7 +391,7 @@ class Consoles(cmd.Cmd):
         print(self.speech[8] + self.result['encoding'])
     def do_about(self, arg):
         '显示关于信息'
-        print("fs 1.2.9")
+        print("fs 1.5.0")
         print(self.speech[11] + self.PersonalInformation[0])
         print(self.speech[12] + self.PersonalInformation[1])
     def do_wq(self, arg):
