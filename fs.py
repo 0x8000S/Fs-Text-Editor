@@ -1,8 +1,8 @@
 # -*- encoding:utf-8 -*-
 ''''
-@Time : 2024/11/30/ PM 00:13:08
+@Time : 2025/06/02 - 01:23:40 PM
 @Author : 氢気氚 | qinch
-@Version : 1.5.0
+@Version : 1.5.1
 @Contact : BlueRectS@outlook.com
 '''
 
@@ -12,6 +12,7 @@ import os
 import chardet
 from colorama import init, Fore, Style
 import json
+import langs
 
 init(autoreset=True)
 env_dist = os.environ # environ是在os.py中定义的一个dict environ = {}
@@ -45,70 +46,14 @@ def save_options(options, filename=f"{config_path}\\config.json"):
         json.dump(options, f, indent=4)
 
 def ChangeTheLanguage(lang):
-    speech_zh = ["欢迎! 键入 help 或 ? 来列出全部的命令.\n", 
-              "配置文件已存在,是否覆盖(Y/N):",
-              "是否保存该文件? (Yes/No)-[默认:Yes]",
-              "这是一个新的文件，请输入文件名:",
-              "文件名: ",
-              "状态: ",
-              "行数: ",
-              "当前行: ",
-              "文件编码: ",
-              "fs已退出!",
-              "不受支持的语言!",
-              "作者: ",
-              "联系方式: "
-              ]
-    speech_en = ["Welcome! Type help or ? to list all the commands.\n",
-     "The configuration file already exists, whether it is overridden (Y/N):",
-    "Do you want to save the file? (Yes/No)-[Default: Yes]",
-    "This is a new file, please enter the file name:",
-    "FileName: ",
-    "State: ",
-    "Number of Lines: ",
-    "Current Row: ",
-    "File Encoding: ",
-    "FS has exited!",
-    "Unsupported Languages!",
-    "Author: ",
-    "Contact :"
-    ]
-    Error_Code_zh = ["", "文件错误", "超出索引", "参数无效", 
-                  "非法的文件名", "编码错误", 
-                  "请检测你的配置文件,或是当前的设置,当前配置编码:", "参数过多", "未知的命令"]
-    Error_Code_en = ["", "File Error", "Out Of Index", "The parameter is invalid",
-                     "Illegal File Name", "Encoding Errors",
-                     "Please check your profile, or the current settings, the current configuration code:",
-                     "Too Many Parameters", "Unknown Command"
-                     ]
+    
     if lang == "zh-CN":
-        return speech_zh, Error_Code_zh
+        return langs.speech_zh, langs.Error_Code_zh
     elif lang == "en-US":
-        return speech_en, Error_Code_en
+        return langs.speech_en, langs.Error_Code_en
 print(os.getcwd())
 class Consoles(cmd.Cmd):
-    HelpfulTips = {"load": ["加载文件到缓冲区","Load the file into the buffer"],
-                    "show": ["展示文件内容", "Present the contents of the file"],
-                    "i": ["插入指定行(未指定则以光标所在行为准)输入 -end 可结束插入", 
-                         "Insert the specified line (if not specified, the cursor will be accurate) and enter -end to end the insertion"],
-                    "o": ["覆写指定行(未指定则以光标所在行为准)输入 -end 可结束覆写", 
-                          "Overwrite the specified line (if not specified, the cursor is accurate), enter -end to end the override"],
-                    "del": ["删除多行或指定删除单行", 
-                            "Delete multiple rows or specify to delete a single line"],
-                    "line": ["查看行或是更改行", "View rows or change rows"],
-                    "unload": ["将当前文件弹出", "Ejects the current file"],
-                    "config": ["配置临时设置或是生成配置文件", 
-                               "Configure temporary settings or generate configuration files"],
-                    "w": ["将缓冲区的文本写入文件", 
-                          "Write the text of the buffer to a file"],
-                    "af": ["关于正在编辑文件的信息", 
-                           "Information about the file being edited"],
-                    "about": ["显示关于信息", 
-                              "Displays information about"],
-                    "wq": ["将缓冲区的文本写入文件并退出fs", 
-                           "Write the text of the buffer to the file and exit FS"],
-                    "q": ["退出 fs", "Exit FS"]
-                   }
+    HelpfulTips = langs.HelpfulTips
     PersonalInformation = ["氢気氚 | qinch", "BlueRectS@outlook.com"]
     OpenEncodings = "auto"
     Language = "zh-CN"
@@ -116,7 +61,7 @@ class Consoles(cmd.Cmd):
         file_option = load_options()
         OpenEncodings = file_option['OpenEncodings']
         Language = file_option['Language']
-    ValidLanguageCode = ['zh-CN', "en-US"]
+    ValidLanguageCode = langs.ValidLanguageCode
     speech, Error_Code = ChangeTheLanguage(Language)
     intro = speech[0]
     Virtual_Text = []
@@ -136,16 +81,16 @@ class Consoles(cmd.Cmd):
         Virtual_Text = F.readlines()
     except IndexError:
         State = 'V'
-        path = "Buffer_Files-fs.txt"
+        path = "~Buffer_Files-fs.txt"
         if OpenEncodings == "auto":
-                F = open("Buffer_Files-fs.txt", "w+", encoding="utf-8")
+                F = open("~Buffer_Files-fs.txt", "w+", encoding="utf-8")
                 result = {'encoding':'utf-8'}
                 result['encoding'] = 'utf-8'
                 Virtual_Text = F.readlines()
                 prompt = f"[{F.name}]@{State}-[{line+1}]~>"
         else:
             try:
-                F = open("Buffer_Files-fs.txt", "w+", encoding=OpenEncodings)
+                F = open("~Buffer_Files-fs.txt", "w+", encoding=OpenEncodings)
                 result = {'encoding':OpenEncodings}
                 result['encoding'] = OpenEncodings
                 Virtual_Text = F.readlines()
@@ -153,14 +98,14 @@ class Consoles(cmd.Cmd):
             except LookupError:
                 print(Fore.RED + Error_Code[5])
                 print(Fore.RED + Error_Code[6] + OpenEncodings)
-                os.remove("Buffer_Files-fs.txt")
+                os.remove("~Buffer_Files-fs.txt")
                 sys.exit()
         
     def do_load(self, arg):
         '加载文件到缓冲区'
         self.F.close()
         if self.State == 'V':
-            os.remove("Buffer_Files-fs.txt")
+            os.remove("~Buffer_Files-fs.txt")
         try:
             result = Code_Detection(arg, self.OpenEncodings, self.Error_Code)
             self.F = open(arg, "r+", encoding=result["encoding"])
@@ -307,7 +252,7 @@ class Consoles(cmd.Cmd):
     def do_unload(self, arg):
         '将当前文件弹出'
         self.F.close()
-        self.path = "Buffer_Files-fs.txt"
+        self.path = "~Buffer_Files-fs.txt"
         self.line = 0
         self.State = 'N'
         self.Virtual_Text = []
@@ -365,7 +310,7 @@ class Consoles(cmd.Cmd):
                     if answer == "Yes" or "Y" or "y" or "":
                         try:
                             name = input(self.speech[3])
-                            os.rename("Buffer_Files-fs.txt", name)
+                            os.rename("~Buffer_Files-fs.txt", name)
                             self.State = 'H'
                             self.path = name
                             self.F = open(self.path, "r+", encoding="utf-8")
@@ -391,7 +336,7 @@ class Consoles(cmd.Cmd):
         print(self.speech[8] + self.result['encoding'])
     def do_about(self, arg):
         '显示关于信息'
-        print("fs 1.5.0")
+        print(langs.Version)
         print(self.speech[11] + self.PersonalInformation[0])
         print(self.speech[12] + self.PersonalInformation[1])
     def do_wq(self, arg):
@@ -407,7 +352,7 @@ class Consoles(cmd.Cmd):
                     if answer == "Yes" or answer == "Y" or answer == "y" or answer == "":
                         try:
                             name = input(self.speech[3])
-                            os.rename("Buffer_Files-fs.txt", name)
+                            os.rename("~Buffer_Files-fs.txt", name)
                             self.State = 'H'
                             self.path = name
                             break
@@ -416,14 +361,14 @@ class Consoles(cmd.Cmd):
                         except FileExistsError:
                             print(self.Error_Code[4])
                     else:
-                        os.remove("Buffer_Files-fs.txt")
+                        os.remove("~Buffer_Files-fs.txt")
         print(self.speech[9])
         return True
     def do_q(self, arg):
         '退出 fs'
         self.F.close()
         if self.State == 'V':
-            os.remove("Buffer_Files-fs.txt")
+            os.remove("~Buffer_Files-fs.txt")
         print(self.speech[9])
         return True
     def do_help(self, arg):
