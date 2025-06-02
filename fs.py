@@ -1,8 +1,8 @@
 # -*- encoding:utf-8 -*-
 ''''
-@Time : 2025/06/02 - 01:23:40 PM
+@Time : 2025/06/02 - 09:12 PM
 @Author : 氢気氚 | qinch
-@Version : 1.5.1
+@Version : 1.5.2
 @Contact : BlueRectS@outlook.com
 '''
 
@@ -123,7 +123,7 @@ class Consoles(cmd.Cmd):
             print(f"===Show=== -> {1}:{len(self.Virtual_Text)} | {self.Error_Code[Error]}")
             k = 1
             for i in self.Virtual_Text:
-                print(f"{k}|\t{i}", end="")
+                print(f"{k}|{i}", end="")
                 k += 1
             print("\n", end="")
             print(f"===Show=== -> {1}:{len(self.Virtual_Text)} | {self.Error_Code[Error]}")
@@ -139,7 +139,7 @@ class Consoles(cmd.Cmd):
                         print(f"===Show=== -> {1}:{start+1} | {self.Error_Code[Error]}")
                         for i in self.Virtual_Text:
                             if k <= start:
-                                print(f"{k+1}|\t{i}", end="")
+                                print(f"{k+1}|{i}", end="")
                             k += 1
                         print("\n", end="")
                         print(f"\n===Show=== -> {1}:{start+1} | {self.Error_Code[Error]}")
@@ -153,7 +153,7 @@ class Consoles(cmd.Cmd):
                         print(f"===Show=== -> {start+1}:{stop+1} | {self.Error_Code[Error]}")
                         for i in self.Virtual_Text:
                             if start <= k <= stop:# k >= start and k <= stop
-                                print(f"{k+1}|\t{i}", end="")
+                                print(f"{k+1}|{i}", end="")
                             k += 1
                         if stop == len(self.Virtual_Text):
                             print("\n", end="")
@@ -265,7 +265,10 @@ class Consoles(cmd.Cmd):
             "OpenEncodings": f"{self.OpenEncodings}",
             "Language": f"{self.Language}"
         }
-        if arg == "new":
+        if len(partition) == 0:
+            for i,v in options.items():
+                print(i + ": " + v)
+        elif arg == "new":
             if os.path.exists(config_path+'\\config.json'):
                 temp = input(self.speech[1])
                 if temp == "Y" or "y" or "":
@@ -303,14 +306,16 @@ class Consoles(cmd.Cmd):
         self.F.close()
         self.F = open(self.path, "w+", encoding=self.result["encoding"])
         self.F.writelines(self.Virtual_Text)
+        writebyte = str(self.F.tell())
         self.F.close()
         if self.State == 'V' or self.State == 'N':
             while True:
                     answer = input(self.speech[2])
-                    if answer == "Yes" or "Y" or "y" or "":
+                    if answer.upper() == "YES" or answer.upper() == "Y" or answer.upper() == "":
                         try:
                             name = input(self.speech[3])
                             os.rename("~Buffer_Files-fs.txt", name)
+                            print(self.speech[13] + writebyte + "byte")
                             self.State = 'H'
                             self.path = name
                             self.F = open(self.path, "r+", encoding="utf-8")
@@ -344,14 +349,16 @@ class Consoles(cmd.Cmd):
         self.F.close()
         self.F = open(self.path, "w+", encoding=self.result["encoding"])
         self.F.writelines(self.Virtual_Text)
+        writebyte = str(self.F.tell())
         self.F.close()
         
         if self.State == 'V' or self.State == 'N':
             while True:
                     answer = input(self.speech[2])
-                    if answer == "Yes" or answer == "Y" or answer == "y" or answer == "":
+                    if answer.upper() == "YES" or answer.upper() == "Y" or answer == "":
                         try:
                             name = input(self.speech[3])
+                            print(self.speech[13] + writebyte + "byte")
                             os.rename("~Buffer_Files-fs.txt", name)
                             self.State = 'H'
                             self.path = name
@@ -361,7 +368,8 @@ class Consoles(cmd.Cmd):
                         except FileExistsError:
                             print(self.Error_Code[4])
                     else:
-                        os.remove("~Buffer_Files-fs.txt")
+                        if os.path.exists("~Buffer_Files-fs.txt"):
+                            os.remove("~Buffer_Files-fs.txt")
         print(self.speech[9])
         return True
     def do_q(self, arg):

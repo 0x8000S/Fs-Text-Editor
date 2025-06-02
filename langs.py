@@ -11,7 +11,8 @@ speech_zh = [
 	"fs已退出!",
 	"不受支持的语言!",
 	"作者: ",
-	"联系方式: "
+	"联系方式: ",
+	"写入 "
 ]
 speech_en = [
     "Welcome! Type help or ? to list all the commands.\n",
@@ -26,7 +27,8 @@ speech_en = [
     "FS has exited!",
     "Unsupported Languages!",
     "Author: ",
-    "Contact :"
+    "Contact :",
+    "Write "
 ]
 Error_Code_zh = [
     "", "文件错误", "超出索引", "参数无效", 
