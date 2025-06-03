@@ -1,8 +1,8 @@
 # -*- encoding:utf-8 -*-
 ''''
-@Time : 2025/06/02 - 09:12 PM
+@Time : 2025/06/03 - 09:56 PM
 @Author : 氢気氚 | qinch
-@Version : 1.5.2
+@Version : 1.5.3
 @Contact : BlueRectS@outlook.com
 '''
 
@@ -12,6 +12,7 @@ import os
 import chardet
 from colorama import init, Fore, Style
 import json
+
 import langs
 
 init(autoreset=True)
@@ -45,12 +46,13 @@ def save_options(options, filename=f"{config_path}\\config.json"):
     with open(filename, 'w') as f:
         json.dump(options, f, indent=4)
 
-def ChangeTheLanguage(lang):
-    
-    if lang == "zh-CN":
-        return langs.speech_zh, langs.Error_Code_zh
-    elif lang == "en-US":
-        return langs.speech_en, langs.Error_Code_en
+def ChangeTheLanguage(lang, oldLang):
+    try:
+        if lang in langs.LanguageCode:
+            return langs.LanguageCode[lang][0], langs.LanguageCode[lang][1], lang
+    except IndexError:
+        print(Fore.RED + langs.LanguageCode[oldLang][1][9])
+        return langs.LanguageCode[oldLang][0], langs.LanguageCode[oldLang][1], oldLang
 print(os.getcwd())
 class Consoles(cmd.Cmd):
     HelpfulTips = langs.HelpfulTips
@@ -62,7 +64,7 @@ class Consoles(cmd.Cmd):
         OpenEncodings = file_option['OpenEncodings']
         Language = file_option['Language']
     ValidLanguageCode = langs.ValidLanguageCode
-    speech, Error_Code = ChangeTheLanguage(Language)
+    speech, Error_Code, Language = ChangeTheLanguage(Language, Language)
     intro = speech[0]
     Virtual_Text = []
     State = 'N'
@@ -297,8 +299,7 @@ class Consoles(cmd.Cmd):
                 print(self.Language)
             else:
                 if partition[1] in self.ValidLanguageCode:
-                    self.Language = partition[1]
-                    self.speech, self.Error_Code = ChangeTheLanguage(self.Language)
+                    self.speech, self.Error_Code, self.Language = ChangeTheLanguage(partition[1],self.Language)
                 else:
                     print(Fore.RED+self.speech[10])
     def do_w(self, arg):

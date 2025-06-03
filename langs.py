@@ -14,6 +14,13 @@ speech_zh = [
 	"联系方式: ",
 	"写入 "
 ]
+
+Error_Code_zh = [
+    "", "文件错误", "超出索引", "参数无效", 
+	"非法的文件名", "编码错误", 
+	"请检测你的配置文件,或是当前的设置,当前配置编码:", "参数过多", "未知的命令", "目标语言配置不完整,将会回退为简体中文"
+]
+
 speech_en = [
     "Welcome! Type help or ? to list all the commands.\n",
     "The configuration file already exists, whether it is overridden (Y/N):",
@@ -30,16 +37,11 @@ speech_en = [
     "Contact :",
     "Write "
 ]
-Error_Code_zh = [
-    "", "文件错误", "超出索引", "参数无效", 
-	"非法的文件名", "编码错误", 
-	"请检测你的配置文件,或是当前的设置,当前配置编码:", "参数过多", "未知的命令"
-]
 Error_Code_en = [
     "", "File Error", "Out Of Index", "The parameter is invalid",
 	"Illegal File Name", "Encoding Errors",
 	"Please check your profile, or the current settings, the current configuration code:",
-	"Too Many Parameters", "Unknown Command"
+	"Too Many Parameters", "Unknown Command", "The target language configuration is incomplete, it will fall back to English"
 ]
 HelpfulTips = {
     "load": ["加载文件到缓冲区","Load the file into the buffer"],
@@ -64,5 +66,10 @@ HelpfulTips = {
 			"Write the text of the buffer to the file and exit FS"],
 	"q": ["退出 fs", "Exit FS"]
 }
-ValidLanguageCode = ['zh-CN', "en-US"]
-Version = "1.5.2"
+ValidLanguageCode = ['zh-CN', "en-US", "cu-SZ"]
+LanguageCode = {
+	'zh-CN': [speech_zh,Error_Code_zh],
+	'en-US': [speech_en,Error_Code_en]
+}
+
+Version = "1.5.3"
